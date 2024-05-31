@@ -1,0 +1,4 @@
+client/node_modules
+nest-auth/node_modules
+client/.env
+nest-auth/.env
