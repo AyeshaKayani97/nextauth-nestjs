@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshJwtGuard } from './guards/refresh.guard';
+import { Response, Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -21,13 +22,17 @@ export class AuthController {
     return this.authService.login(body);
   }
 
-  @UseGuards(RefreshJwtGuard)
-  @Post("refresh")
-  async refreshToken(@Req() req){
-    return await this.authService.refreshToken(req.user);
+  // @UseGuards(RefreshJwtGuard)
+  // @Post("refresh")
+  // async refreshToken(@Req() req){
+  //   return await this.authService.refreshToken(req.user);
 
-  }
+  // }
+@Get("user")
+async user(@Req() req:Request){
+  return this.authService.getUser(req);
 
+}
   @Get()
   findAll() {
     return this.authService.findAll();

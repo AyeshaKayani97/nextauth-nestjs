@@ -8,7 +8,7 @@ declare module "next-auth"{
             password:string
         };
 
-        backendToken:{
+        backendTokens:{
             accessToken:string,
             refreshToken:string,
             expiresIn: number
@@ -29,7 +29,7 @@ declare module "next-auth/jwt"{
             expiresIn: number
         };
 
-        backendToken:{
+        backendTokens:{
             accessToken:string,
             refreshToken:string,
             expiresIn: number

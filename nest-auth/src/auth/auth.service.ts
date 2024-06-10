@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Res, UnauthorizedException } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -7,6 +7,7 @@ import { Model } from 'mongoose';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { Response, Request } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -80,6 +81,11 @@ export class AuthService {
     }
 
     const token = this.jwtService.sign(payload)
+    // const jwt = this.jwtService.sign({id:user._id})
+    // res.cookie("jwt", jwt, {httpOnly:true})
+
+    // const {confirmPassword,...otherFields}= user
+    //  res.status(200).send(user);
 
     return { user, 
     backendTokens:{
@@ -95,20 +101,39 @@ export class AuthService {
 
   }
 
-  async refreshToken(user:any){
-    const payload = {
-      username: user.username,
-      sub: user.sub
-    }
-    const token = await this.jwtService.signAsync(payload)
-    return {
-      accessToken:token,
-      refreshToken:await this.jwtService.signAsync(payload, {
-          secret:process.env.JWT_REFRESH_TOKEN,
-          expiresIn:"7d"
-        })
+  // async refreshToken(user:any){
+  //   const payload = {
+  //     username: user.username,
+  //     sub: user.sub
+  //   }
+  //   const token = await this.jwtService.signAsync(payload)
+  //   return {
+  //     accessToken:token,
+  //     refreshTokens:await this.jwtService.signAsync(payload, {
+  //         secret:process.env.JWT_REFRESH_TOKEN,
+  //         expiresIn:"7d"
+  //       })
       
-    }
+  //   }
+
+  // }
+
+  async getUser(req:Request){
+   const jwt  = req.cookies["jwt"]
+   if (!jwt) {
+    throw new UnauthorizedException('No JWT token found');
+  }
+
+   const data = this.jwtService.verify(jwt);
+   if(!data){
+    throw new UnauthorizedException()
+   }
+   const user = await this.userModel.findById(data.id)
+   if(user){
+    const {password, ...result} = user;
+    return result
+   }
+   throw new UnauthorizedException('User not found');
 
   }
 
