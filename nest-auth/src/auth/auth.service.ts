@@ -53,53 +53,72 @@ export class AuthService {
 
   // Login 
 
-  async login(body:LoginDto, res:Response){
-    const {  username, password} = body;
-    // Checking whether user with this email exists or not
-    const user = await this.userModel.findOne({username:username})
+  async login(body:LoginDto){
+    const { username, password } = body;
+    console.log('Login request body:', body);
 
+    // Checking whether user with this username exists or not
+    const user = await this.userModel.findOne({ username:username });
+    // console.log('User found:', user);
 
-    if(!user){
-      throw new UnauthorizedException("Invalid Username Or Password");
+    if (!user) {
+      console.error('Invalid Username or Password');
+      throw new UnauthorizedException('Invalid Username Or Password');
     }
-    // compare: This is a method provided by bcrypt for comparing a plaintext password with a hashed password. It takes two arguments:
-// The first argument is the plaintext password (password) that the user provided during authentication.
-// The second argument is the hashed password retrieved from your database (user.password).
+
+    // Compare plaintext password with hashed password
     const isPasswordMatched = await bcrypt.compare(password, user.password);
+    // console.log('Password match result:', isPasswordMatched);
 
-    if(!isPasswordMatched){
-      throw new UnauthorizedException("Invalid Username Or Password")
+    if (!isPasswordMatched) {
+      console.error('Invalid Username or Password');
+      throw new UnauthorizedException('Invalid Username Or Password');
     }
-    // this.jwtService ---------------  This service is responsible for signing and verifying JWT tokens.
-    // The sign method then generates a JWT token by:
-    //  Taking the payload object {id:user._id}.
-    // const payload = {
-    //   username: user.email,
-    //   // sub: This property represents the subject of the JWT, which in this case is the unique identifier (userId) of the user. It's often used to uniquely identify the user within the system or application.
-    //   sub:{
-    //     name:user.username
-    //   }
-    // }
 
-    // const token = this.jwtService.sign(payload)
-    const jwt = this.jwtService.sign({id:user._id, name:user.username})
-    res.cookie("jwt", jwt, {httpOnly:true})
+    // Generate JWT tokens
+    const payload = {
+      username: user.email,
+      sub: {
+        name: user.username,
+      },
+    };
 
-    // const {confirmPassword,...otherFields}= user
-     res.status(200).send(user);
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_TOKEN,
+      expiresIn: '7d',
+    });
 
-    // return { user, 
-    // backendTokens:{
-    //   accessToken:token,
-    //   refreshToken:this.jwtService.sign(payload,{
-    //     secret:process.env.JWT_REFRESH_TOKEN,
-    //     expiresIn:"7d"
-    //   })
-    // }  
-    
-    // }
+    // console.log('Access Token:', accessToken);
+    // console.log('Refresh Token:', refreshToken);
+
+    return { 
+      user,
+      backendTokens: {
+        accessToken,  
+        refreshToken,
+      }
+    };
 
 
+  }
+
+  // Refresh Token
+
+  async refreshToken(user: any) {
+    const payload = {
+      username: user.username,
+      sub: user.sub,
+    };
+
+    return {
+
+      accessToken: await this.jwtService.signAsync(payload),
+      refreshToken: await this.jwtService.signAsync(payload, {
+        expiresIn: '7d',
+        secret: process.env.JWT_REFRESH_TOKEN,
+      })
+    };
   }
 
   // async refreshToken(user:any){

@@ -17,9 +17,9 @@ export class AuthController {
   }
 
   @Post("/login")
-  login(@Body() body: LoginDto, @Res() res:Response) {
+  login(@Body() body: LoginDto) {
     // console.log(body);
-     this.authService.login(body, res);
+     return this.authService.login(body);
   }
 
   // @UseGuards(RefreshJwtGuard)

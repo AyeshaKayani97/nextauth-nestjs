@@ -8,7 +8,9 @@ type Props = {
 
 const DashBoardLayout = async (props: Props) => {
   const session = await getServerSession(authOptions);
-  console.log(session);
+  console.log("-------------------------session dashboard----------");
+
+  console.log({session});
   return (
     <div className=" grid grid-cols-12">
       <div className="grid-cols-4 border-r shadow h-screen p-2">

@@ -7,6 +7,7 @@ const SignInButton = () => {
     // `session` will match the returned value of `callbacks.session()` from `NextAuth()`
     // const { data: session } = typeof window !== 'undefined' ? useSession() : { data: null };
     const {data:session} = useSession()
+    // console.log("----------session from navbar----------------");
     // console.log({session});
 
 
