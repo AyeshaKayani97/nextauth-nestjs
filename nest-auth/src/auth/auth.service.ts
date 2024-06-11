@@ -1,4 +1,4 @@
-import { Injectable, Res, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -7,7 +7,8 @@ import { Model } from 'mongoose';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { Response, Request } from 'express';
+// import { Response, Request } from 'express';
+import { Response, Request } from 'express';  
 
 @Injectable()
 export class AuthService {
@@ -52,7 +53,7 @@ export class AuthService {
 
   // Login 
 
-  async login(body:LoginDto){
+  async login(body:LoginDto, res:Response){
     const {  username, password} = body;
     // Checking whether user with this email exists or not
     const user = await this.userModel.findOne({username:username})
@@ -72,31 +73,31 @@ export class AuthService {
     // this.jwtService ---------------  This service is responsible for signing and verifying JWT tokens.
     // The sign method then generates a JWT token by:
     //  Taking the payload object {id:user._id}.
-    const payload = {
-      username: user.email,
-      // sub: This property represents the subject of the JWT, which in this case is the unique identifier (userId) of the user. It's often used to uniquely identify the user within the system or application.
-      sub:{
-        name:user.username
-      }
-    }
+    // const payload = {
+    //   username: user.email,
+    //   // sub: This property represents the subject of the JWT, which in this case is the unique identifier (userId) of the user. It's often used to uniquely identify the user within the system or application.
+    //   sub:{
+    //     name:user.username
+    //   }
+    // }
 
-    const token = this.jwtService.sign(payload)
-    // const jwt = this.jwtService.sign({id:user._id})
-    // res.cookie("jwt", jwt, {httpOnly:true})
+    // const token = this.jwtService.sign(payload)
+    const jwt = this.jwtService.sign({id:user._id, name:user.username})
+    res.cookie("jwt", jwt, {httpOnly:true})
 
     // const {confirmPassword,...otherFields}= user
-    //  res.status(200).send(user);
+     res.status(200).send(user);
 
-    return { user, 
-    backendTokens:{
-      accessToken:token,
-      refreshToken:this.jwtService.sign(payload,{
-        secret:process.env.JWT_REFRESH_TOKEN,
-        expiresIn:"7d"
-      })
-    }  
+    // return { user, 
+    // backendTokens:{
+    //   accessToken:token,
+    //   refreshToken:this.jwtService.sign(payload,{
+    //     secret:process.env.JWT_REFRESH_TOKEN,
+    //     expiresIn:"7d"
+    //   })
+    // }  
     
-    }
+    // }
 
 
   }
