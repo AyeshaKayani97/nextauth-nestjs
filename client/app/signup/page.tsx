@@ -4,7 +4,8 @@ import InputBox from "@/components/InputBox";
 import { Backend_URL } from "@/lib/Constants";
 // import { Backend_URL } from "@/lib/Constants";
 import Link from "next/link";
-import React, { useRef } from "react";
+import { useRouter } from "next/navigation";
+import React, { useRef, useState } from "react";
 
 type FormInputs = {
   username: string;
@@ -14,53 +15,80 @@ type FormInputs = {
 };
 
 const SignupPage = () => {
-
-  //Register function
-
-  const register = async () => {
-    if(data.current.password !== data.current.confirmPassword){
-      alert("Passwords don't match");
-      return;
-    }
-    const res = await fetch(Backend_URL + "/auth/register", {
-      method: "POST",
-      body: JSON.stringify({
-        name: data.current.username,
-        email: data.current.email,
-        password: data.current.password,
-        confirmPassword:data.current.confirmPassword
-
-      }),
-
-      headers: {
-        "Content-Type": "application/json",
-      },
-      
-    });
-    console.log(res);
-
-    if (!res.ok) {
-      alert(res.statusText);
-      return;
-    }
-    const response = await res.json();
-
-    alert("User Registered!");
-    console.log({ response });
-  };
+  
+  
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   const data = useRef<FormInputs>({
     username: "",
     email: "",
     password: "",
     confirmPassword:""
   });
+
+  //Register function
+
+  const register = async () => {
+    if(data.current.password !== data.current.confirmPassword){
+      setError("Passwords don't match");
+      return;
+    }
+    try{
+      const res = await fetch(Backend_URL + "/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          name: data.current.username,
+          email: data.current.email,
+          password: data.current.password,
+          confirmPassword:data.current.confirmPassword
+  
+        }),
+  
+        headers: {
+          "Content-Type": "application/json",
+        },
+        
+      });
+
+     
+  
+      if (!res.ok) {
+        const errorMessage = await res.json();
+        setError(errorMessage.message.join(", "));
+        return;
+        // alert(res.statusText);
+        // return;
+      }
+
+      const response = await res.json();
+      console.log("Response from signup page-------")
+      console.log(response);
+      console.log({response});
+      alert("User Registered!");
+      setError(null);
+      router.push("/auth/signIn");
+
+    }catch(err){
+      setError("An unexpected error occurred. Please try again.");
+      console.error(err);
+
+    }
+
+
+  };
+
   return (
-    <div className="m-2 border rounded overflow-hidden shadow">
-      <div className="p-2 bg-gradient-to-b from-white to-slate-200 text-slate-600">
+    <div className="mt-9 overflow-hidden w-full flex flex-col justify-center items-center">
+        <h1 className="p-2  text-slate-600 font-bold text-xl">
         Sign up
-      </div>
-      <div className="p-2 flex flex-col gap-6">
-        <InputBox
+        </h1>
+      <div className="p-4 flex flex-col gap-6 w-[500px] shadow border rounded">
+      {error && (
+          <div className="text-red-500 text-center">
+            {error}
+          </div>
+        )}
+        <InputBox 
           autoComplete="off"
           name="username"
           labelText="Name"

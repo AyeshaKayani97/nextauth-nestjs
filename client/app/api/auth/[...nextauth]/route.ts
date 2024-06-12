@@ -1,9 +1,14 @@
-import { Backend_URL } from "@/lib/Constants";
+import { Backend_URL, NEXTAUTH_SECRET } from "@/lib/Constants";
 import NextAuth, { NextAuthOptions } from "next-auth";
 import  CredentialsProvider  from "next-auth/providers/credentials";
+import { JWT } from "next-auth/jwt";
+import { NextApiRequest } from "next";
 
 
 export const authOptions: NextAuthOptions = {
+ 
+  secret:NEXTAUTH_SECRET,
+
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -29,11 +34,29 @@ export const authOptions: NextAuthOptions = {
         const user = await res.json();
         console.log("---------------------------------user from route.ts file----------");
         console.log(user);
-        console.log("------------------------user_id----------------------------");
-        console.log(user._id);
+
+        if (user) {
+          return user
+        } else {
+          return null;
+        }
+        // console.log(user);
+        // console.log("------------------------user_id----------------------------");
+        // console.log(user._id);
 
         // Ensure the returned user object includes necessary fields
-        return user && { ...user, id: user._id, backendTokens: user.backendTokens };
+        
+        // return user && { ...user, id: user._id, backendTokens: user.backendTokens };
+        // return {
+        //   id: user._id,
+        //   email: user.email,
+        //   name: user.name,
+        // };
+        // console.log(user)
+
+
+
+        
       
       },
     }),
@@ -42,52 +65,49 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signIn",
   },
   callbacks: {
-    async jwt({ token, user }) {
-      console.log("-------------------jwt token----------");
-      console.log(token);
-      console.log("------------------jwt user----------");
-      console.log(user);
+  
+    // async jwt({ token, user }) {
+    //   console.log("-------------------jwt token----------");
+    //   console.log(token);
+    //   console.log("------------------jwt user----------");
+    //   console.log(user);
 
-      // Merge user object into token if user is logged in
+    //   // Merge user object into token if user is logged in
+    //   if (user) {
+    //     return { ...token, ...user };
+    //   }
+
+    //   console.log("---------------jwt final token ----------------------");
+    //   console.log(token);
+    //   return token;
+    // },
+    jwt: ({ token, user }) => {
+        console.log("-------------------jwt token----------");
+      console.log(token);
+      console.log("-------------------jwt user----------");
+      console.log(user);
       if (user) {
         return { ...token, ...user };
       }
-
       console.log("---------------jwt final token ----------------------");
       console.log(token);
       return token;
     },
 
+
     async session({ session, token }) {
-      console.log("-------------------token----------");
-      console.log(token);
-      console.log("-------------------session----------");
-
-      // Set user and backendTokens from token
-      session.user = token.user;
-      session.backendTokens = token.backendTokens;
-
-      console.log("-------------------final  session----------");
+    console.log("-------------------  session----------");
+    session.user = token.user;
+    session.backendTokens = token.backendTokens
+    console.log("-------------------final  session----------");
       console.log(session);
-
       return session;
     },
-    async authorized({ auth, request }) {
-      const user = auth?.user;
-      const pathname = request.nextUrl?.pathname;
 
-      // ONLY AUTHENTICATED USERS CAN REACH THE HOME PAGE
+    
+    
 
-      if ((pathname === "/login" || pathname === "/register") && user) {
-        return Response.redirect(new URL("/", request.nextUrl));
-      }
-      // ONLY UNAUTHENTICATED USERS CAN REACH THE LOGIN PAGE
-      if (pathname === "/" && !user) {
-        return Response.redirect(new URL("/login", request.nextUrl));
-      }
 
-      return true;
-    },
   },
 };
 

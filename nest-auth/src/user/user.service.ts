@@ -20,6 +20,8 @@ export class UserService {
     return `This action returns all user`;
   }
 
+  // user profile ka hy uska backend nh hy 
+
   findOne(id: string) {
     const isValidId = mongoose.Types.ObjectId.isValid(id);
 
